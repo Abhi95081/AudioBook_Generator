@@ -12,7 +12,8 @@ from tts import tts_synthesize
 def main() -> int:
     parser = argparse.ArgumentParser(description="Extract text (and optional enrich/TTS) from a file to outputs/")
     parser.add_argument("path", help="Path to input file (.txt, .pdf, .docx, image)")
-    parser.add_argument("--enrich", action="store_true", help="Enrich text with OpenAI if OPENAI_API_KEY is set")
+    parser.add_argument("--enrich", action="store_true", help="Enrich text with Gemini AI (requires GEMINI_API_KEY)")
+    parser.add_argument("--model", default=None, help="Gemini model name (default: gemini-pro)")
     parser.add_argument("--tts", choices=["pyttsx3", "gtts"], help="Generate speech with selected engine")
     parser.add_argument("--rate", type=int, default=180, help="pyttsx3 rate (wpm)")
     parser.add_argument("--lang", default="en", help="gTTS language (default: en)")
@@ -31,7 +32,7 @@ def main() -> int:
 
     # Optional enrich
     if args.enrich and text.strip():
-        enriched = enrich_text(text)
+        enriched = enrich_text(text, model=args.model)
         # Overwrite or save alongside
         txt_path.write_text(enriched, encoding="utf-8")
         print(f"Enriched text updated: {txt_path}")

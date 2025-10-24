@@ -5,51 +5,70 @@ from typing import Optional
 
 from utils import chunk_text
 
-# Optional OpenAI import; fall back gracefully if not available or no key.
+# Gemini API import; fall back gracefully if not available or no key.
 try:
-    from openai import OpenAI  # type: ignore
+    import google.generativeai as genai  # type: ignore
 except Exception:  # pragma: no cover - optional
-    OpenAI = None  # type: ignore
+    genai = None  # type: ignore
 
 
 SYS_PROMPT = (
-    "You are a helpful assistant. Improve clarity and fix obvious OCR errors "
-    "without changing meaning. Keep the output concise but faithful."
+    "You are an expert audiobook editor. Rewrite this text for an engaging audiobook narration. "
+    "Fix any OCR errors, improve sentence flow for spoken delivery, and make it listener-friendly. "
+    "Keep the original meaning and key information intact, but optimize for natural speech patterns. "
+    "Remove any artifacts like page numbers or formatting issues."
 )
 
 
-def _openai_client() -> Optional["OpenAI"]:
-    api_key = os.getenv("OPENAI_API_KEY")
-    if not api_key or OpenAI is None:
-        return None
-    try:
-        client = OpenAI(api_key=api_key)
-        return client
-    except Exception:
-        return None
-
-
 def enrich_text(text: str, model: Optional[str] = None, max_chars: int = 4000) -> str:
-    """Optionally enrich text via OpenAI. If no API key or errors, return input."""
+    """Enrich text via Google Gemini API.
+
+    Args:
+        text: Input text to enrich (from extracted .txt file)
+        model: Gemini model name (default: gemini-pro)
+        max_chars: Max chunk size for long documents
+
+    Env vars:
+        GEMINI_API_KEY: Your Google Gemini API key (required)
+        GEMINI_MODEL: Model name override (optional, default: gemini-pro)
+
+    Returns:
+        Enriched text with OCR errors fixed, or original text if API unavailable.
+    """
     text = text or ""
-    client = _openai_client()
-    if client is None:
+    if not text.strip():
         return text
 
-    model = model or os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+    if genai is None:
+        print("Warning: google-generativeai not installed. Returning original text.")
+        return text
+
+    api_key = os.getenv("GEMINI_API_KEY")
+    if not api_key:
+        print("Warning: GEMINI_API_KEY not set. Returning original text.")
+        return text
+
+    model = model or os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+
+    try:
+        genai.configure(api_key=api_key)
+        gen_model = genai.GenerativeModel(model)
+    except Exception as e:
+        print(f"Warning: Failed to initialize Gemini model: {e}")
+        return text
+
     chunks = chunk_text(text, max_chars=max_chars)
     outputs = []
-    for ch in chunks:
+    
+    for i, chunk in enumerate(chunks, 1):
         try:
-            resp = client.chat.completions.create(
-                model=model,
-                messages=[
-                    {"role": "system", "content": SYS_PROMPT},
-                    {"role": "user", "content": ch},
-                ],
-                temperature=0.2,
-            )
-            outputs.append(resp.choices[0].message.content or ch)
-        except Exception:
-            outputs.append(ch)
+            prompt = f"{SYS_PROMPT}\n\n{chunk}"
+            response = gen_model.generate_content(prompt)
+            enriched = response.text if response.text else chunk
+            outputs.append(enriched)
+            print(f"Enriched chunk {i}/{len(chunks)}")
+        except Exception as e:
+            print(f"Warning: Failed to enrich chunk {i}: {e}. Using original.")
+            outputs.append(chunk)
+
     return "\n".join(outputs)

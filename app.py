@@ -15,8 +15,10 @@ st.write("Upload a document or image, optionally enhance the text with AI, and g
 
 with st.sidebar:
     st.header("Options")
-    do_enrich = st.toggle("Use AI enrichment (OpenAI)", value=False, help="Requires OPENAI_API_KEY")
-    model = st.text_input("OpenAI model", value="gpt-4o-mini")
+    do_enrich = st.toggle("Use Gemini AI enrichment", value=False, help="Requires GEMINI_API_KEY")
+    model = st.text_input("Gemini model", value="gemini-pro", help="gemini-pro or gemini-1.5-pro")
+    
+    st.divider()
     engine = st.selectbox("TTS engine", options=["pyttsx3", "gtts"], index=0)
     rate = st.number_input("pyttsx3 rate (wpm)", min_value=80, max_value=300, value=180)
     lang = st.text_input("gTTS language", value="en")
@@ -52,8 +54,8 @@ if uploaded:
 
     final_text = text
     if do_enrich:
-        with st.spinner("Enriching with OpenAI..."):
-            final_text = enrich_text(text, model=model)
+        with st.spinner("Enriching with Gemini AI..."):
+            final_text = enrich_text(text, model=model if model else None)
         st.subheader("Enriched text")
         st.text_area("Text (enriched)", value=final_text, height=250, key="enriched_text")
 

@@ -35,9 +35,11 @@ def wait_for_complete(path: Path, timeout: float = 30.0, poll: float = 0.25) -> 
 
 
 class UploadsHandler(FileSystemEventHandler):
-    def __init__(self, enrich: bool = False, tts_engine: Optional[str] = None, rate: int = 180, lang: str = "en") -> None:
+    def __init__(self, enrich: bool = False, model: Optional[str] = None,
+                 tts_engine: Optional[str] = None, rate: int = 180, lang: str = "en") -> None:
         super().__init__()
         self.enrich = enrich
+        self.model = model
         self.tts_engine = tts_engine
         self.rate = rate
         self.lang = lang
@@ -54,7 +56,7 @@ class UploadsHandler(FileSystemEventHandler):
 
         if self.enrich:
             text = out_txt.read_text(encoding="utf-8")
-            enriched = enrich_text(text)
+            enriched = enrich_text(text, model=self.model)
             out_txt.write_text(enriched, encoding="utf-8")
             print(f"Enriched text updated: {out_txt}")
 
@@ -80,7 +82,8 @@ class UploadsHandler(FileSystemEventHandler):
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Watch the uploads/ folder and auto-extract to outputs/text/")
-    parser.add_argument("--enrich", action="store_true", help="Enrich text with OpenAI if OPENAI_API_KEY is set")
+    parser.add_argument("--enrich", action="store_true", help="Enrich text with Gemini AI (requires GEMINI_API_KEY)")
+    parser.add_argument("--model", default=None, help="Gemini model name (default: gemini-pro)")
     parser.add_argument("--tts", choices=["pyttsx3", "gtts"], help="Generate speech for each file")
     parser.add_argument("--rate", type=int, default=180, help="pyttsx3 rate (wpm)")
     parser.add_argument("--lang", default="en", help="gTTS language (default: en)")
@@ -90,7 +93,8 @@ def main() -> int:
     uploads = UPLOADS_DIR
     uploads.mkdir(parents=True, exist_ok=True)
 
-    handler = UploadsHandler(enrich=args.enrich, tts_engine=args.tts, rate=args.rate, lang=args.lang)
+    handler = UploadsHandler(enrich=args.enrich, model=args.model,
+                             tts_engine=args.tts, rate=args.rate, lang=args.lang)
     observer = Observer()
     observer.schedule(handler, str(uploads), recursive=False)
     observer.start()
