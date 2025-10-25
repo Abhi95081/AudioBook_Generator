@@ -84,7 +84,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Watch the uploads/ folder and auto-extract to outputs/text/")
     parser.add_argument("--enrich", action="store_true", help="Enrich text with Gemini AI (requires GEMINI_API_KEY)")
     parser.add_argument("--model", default=None, help="Gemini model name (default: gemini-pro)")
-    parser.add_argument("--tts", choices=["pyttsx3", "gtts"], help="Generate speech for each file")
+    parser.add_argument("--tts", choices=["pyttsx3", "coqui", "gtts"], help="Generate speech for each file")
     parser.add_argument("--rate", type=int, default=180, help="pyttsx3 rate (wpm)")
     parser.add_argument("--lang", default="en", help="gTTS language (default: en)")
     args = parser.parse_args()

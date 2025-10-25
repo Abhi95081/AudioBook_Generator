@@ -16,10 +16,10 @@ st.write("Upload a document or image, optionally enhance the text with AI, and g
 with st.sidebar:
     st.header("Options")
     do_enrich = st.toggle("Use Gemini AI enrichment", value=False, help="Requires GEMINI_API_KEY")
-    model = st.text_input("Gemini model", value="gemini-pro", help="gemini-pro or gemini-1.5-pro")
+    model = st.text_input("Gemini model", value="gemini-2.5-flash", help="e.g., gemini-2.5-flash")
     
     st.divider()
-    engine = st.selectbox("TTS engine", options=["pyttsx3", "gtts"], index=0)
+    engine = st.selectbox("TTS engine", options=["pyttsx3", "coqui", "gtts"], index=0)
     rate = st.number_input("pyttsx3 rate (wpm)", min_value=80, max_value=300, value=180)
     lang = st.text_input("gTTS language", value="en")
 
@@ -64,18 +64,38 @@ if uploaded:
         basename = file_stem(uploaded.name)
         if st.button("Generate speech"):
             with st.spinner("Synthesizing audio..."):
-                audio_path = tts_synthesize(
-                    final_text,
-                    engine=engine,
-                    rate=rate if engine == "pyttsx3" else None,
-                    language=lang if engine == "gtts" else "en",
-                    basename=basename,
-                )
-            st.success(f"Saved audio to: {audio_path}")
-            if audio_path.suffix.lower() == ".mp3":
-                st.audio(str(audio_path), format="audio/mp3")
-            else:
-                st.audio(str(audio_path))
+                try:
+                    audio_path = tts_synthesize(
+                        final_text,
+                        engine=engine,
+                        rate=rate if engine == "pyttsx3" else None,
+                        language=lang if engine == "gtts" else "en",
+                        basename=basename,
+                    )
+                except Exception as e:
+                    st.error(f"TTS failed: {e}")
+                    audio_path = None
+
+            if audio_path:
+                st.success(f"Saved audio to: {audio_path}")
+                # Inline player
+                if audio_path.suffix.lower() == ".mp3":
+                    st.audio(str(audio_path), format="audio/mp3")
+                    mime = "audio/mpeg"
+                else:
+                    st.audio(str(audio_path))
+                    mime = "audio/wav"
+                # Immediate download button
+                try:
+                    with open(audio_path, "rb") as f:
+                        st.download_button(
+                            label="Download audio",
+                            data=f,
+                            file_name=audio_path.name,
+                            mime=mime,
+                        )
+                except Exception:
+                    pass
 
 st.divider()
-st.caption("Outputs are saved under 'outputs/text' and 'outputs/audio'. On Windows, install Tesseract OCR and Poppler for best PDF OCR.")
+st.caption("Outputs are saved under 'outputs/text' and 'outputs/audio'. On Windows, install Tesseract OCR and Poppler for best PDF OCR. For Coqui TTS, additional dependencies (torch) are required.")

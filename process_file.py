@@ -14,7 +14,7 @@ def main() -> int:
     parser.add_argument("path", help="Path to input file (.txt, .pdf, .docx, image)")
     parser.add_argument("--enrich", action="store_true", help="Enrich text with Gemini AI (requires GEMINI_API_KEY)")
     parser.add_argument("--model", default=None, help="Gemini model name (default: gemini-pro)")
-    parser.add_argument("--tts", choices=["pyttsx3", "gtts"], help="Generate speech with selected engine")
+    parser.add_argument("--tts", choices=["pyttsx3", "coqui", "gtts"], help="Generate speech with selected engine")
     parser.add_argument("--rate", type=int, default=180, help="pyttsx3 rate (wpm)")
     parser.add_argument("--lang", default="en", help="gTTS language (default: en)")
 

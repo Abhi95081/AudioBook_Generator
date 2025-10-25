@@ -16,8 +16,14 @@ try:
 except Exception:  # pragma: no cover - optional
     gTTS = None
 
+# Coqui TTS (optional, heavy dependency)
+try:
+    from TTS.api import TTS as CoquiTTS  # type: ignore
+except Exception:  # pragma: no cover - optional
+    CoquiTTS = None  # type: ignore
 
-EngineName = Literal["pyttsx3", "gtts"]
+
+EngineName = Literal["pyttsx3", "gtts", "coqui"]
 
 
 def tts_synthesize(
@@ -32,6 +38,7 @@ def tts_synthesize(
 
     - pyttsx3: offline, outputs WAV
     - gTTS: online, outputs MP3
+    - coqui: offline neural TTS (Coqui), outputs WAV (requires coqui TTS + torch)
     """
     ensure_dirs()
     text = text or ""
@@ -55,6 +62,24 @@ def tts_synthesize(
         tts = gTTS(text=text, lang=language)
         out_path = OUTPUT_AUDIO_DIR / (timestamped_filename(basename, "gtts") + ".mp3")
         tts.save(str(out_path))
+        return out_path
+
+    elif engine == "coqui":
+        if CoquiTTS is None:
+            raise RuntimeError(
+                "Coqui TTS not installed. Install with: pip install TTS torch --extra-index-url https://download.pytorch.org/whl/cpu"
+            )
+        # Choose a small, widely available English model by default
+        model_name = voice_id or "tts_models/en/ljspeech/tacotron2-DDC"
+        try:
+            tts = CoquiTTS(model_name=model_name, progress_bar=False)
+        except Exception as e:
+            raise RuntimeError(f"Failed to initialize Coqui TTS model '{model_name}': {e}")
+        out_path = OUTPUT_AUDIO_DIR / (timestamped_filename(basename, "coqui") + ".wav")
+        try:
+            tts.tts_to_file(text=text, file_path=str(out_path))
+        except Exception as e:
+            raise RuntimeError(f"Coqui synthesis failed: {e}")
         return out_path
 
     else:

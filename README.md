@@ -80,4 +80,5 @@ Press Ctrl+C to stop.
 - This is a minimal demo. For large documents, consider chunking and streaming audio in segments.
 
 ## To Run This on Cmd Line
-$env:GEMINI_API_KEY = "AIzaSyAa2vAQjxEFJMwowuN25BFbOTbjkfTn84U"; $env:TESSERACT_CMD = "C:\Program Files\Tesseract-OCR\tesseract.exe"; .\.venv\Scripts\python.exe watch_uploads.py --enrich
+<!-- $env:GEMINI_API_KEY = "AIzaSyAa2vAQjxEFJMwowuN25BFbOTbjkfTn84U"; $env:TESSERACT_CMD = "C:\Program Files\Tesseract-OCR\tesseract.exe"; .\.venv\Scripts\python.exe watch_uploads.py --enrich -->
+$env:GEMINI_API_KEY="AIzaSyAa2vAQjxEFJMwowuN25BFbOTbjkfTn84U"; $env:TESSERACT_CMD="C:\Program Files\Tesseract-OCR\tesseract.exe"; .\.venv\Scripts\python.exe watch_uploads.py --enrich --tts pyttsx3
