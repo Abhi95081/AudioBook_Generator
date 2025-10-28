@@ -9,11 +9,11 @@ __pycache__/
 *.pyo
 *.pyd
 
-# Outputs (optional - uncomment if you don't want to track outputs)
-# outputs/
+# Outputs (we want to ignore generated outputs directory)
+outputs/
 
-# Uploads (optional - uncomment if you don't want to track uploads)
-# uploads/
+# Uploads (uploaded input files shouldn't be tracked)
+uploads/
 
 # IDE
 .vscode/
