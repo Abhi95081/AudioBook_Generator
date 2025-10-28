@@ -62,14 +62,17 @@ class UploadsHandler(FileSystemEventHandler):
 
         if self.tts_engine:
             text = out_txt.read_text(encoding="utf-8")
-            audio_path = tts_synthesize(
-                text,
-                engine=self.tts_engine,  # type: ignore[arg-type]
-                rate=self.rate if self.tts_engine == "pyttsx3" else None,
-                language=self.lang if self.tts_engine == "gtts" else "en",
-                basename=path.stem,
-            )
-            print(f"Audio saved: {audio_path}")
+            if not text.strip():
+                print(f"Skipping TTS: No text extracted from {path.name}")
+            else:
+                audio_path = tts_synthesize(
+                    text,
+                    engine=self.tts_engine,  # type: ignore[arg-type]
+                    rate=self.rate if self.tts_engine == "pyttsx3" else None,
+                    language=self.lang if self.tts_engine == "gtts" else "en",
+                    basename=path.stem,
+                )
+                print(f"Audio saved: {audio_path}")
 
     def on_created(self, event):  # type: ignore[override]
         if isinstance(event, FileCreatedEvent):

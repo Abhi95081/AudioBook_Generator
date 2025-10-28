@@ -42,6 +42,10 @@ def tts_synthesize(
     """
     ensure_dirs()
     text = text or ""
+    
+    # Validate text is not empty
+    if not text.strip():
+        raise ValueError("Cannot synthesize speech: text is empty or whitespace-only")
 
     if engine == "pyttsx3":
         if pyttsx3 is None:
